@@ -22,4 +22,11 @@ router.get("/", async function(req, res, next) {
   res.json(docs);
 });
 
+router.get("/:username", async function(req, res, next) {
+  const deviceUsername = req.params.username;
+  const query = Sensor.find({ username: deviceUsername });
+  const docs = await query; // Get the documents
+  res.json(docs);
+});
+
 module.exports = router;
