@@ -22,7 +22,6 @@ app.use(cookieParser());
 // CORS to allow localhost REST operations
 app.use(cors());
 
-//app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
@@ -46,6 +45,7 @@ mongoose.connect("mongodb://localhost/sensors", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
+
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 var Sensor = mongoose.model("Sensor", sensorSchema);
@@ -79,10 +79,14 @@ client.on("error", function(err) {
   client.end();
 });
 
+const requestID = Math.random()
+  .toString(4)
+  .substr(2, 8);
+
 client.on("connect", function() {
   client.subscribe("v1/devices/me/attributes/+", { qos: 0 });
   client.publish(
-    "v1/devices/me/attributes/request/2",
+    "v1/devices/me/attributes/request/" + requestID,
     '{"clientKeys":"humidity,temperature,rain_height,wind_direction,wind_intensity"}'
   );
 });
