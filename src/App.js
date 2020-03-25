@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import useAxios from "axios-hooks";
-import defaultDevice from "./credentials";
 
 import CanvasJSReact from "./canvasjs.react";
 //var CanvasJS = CanvasJSReact.CanvasJS;
@@ -9,8 +8,11 @@ var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 export default function App() {
   var humidityPoints = [];
   var temperaturePoints = [];
+  var windDirectionPoints = [];
+  var windIntensityPoints = [];
+  var rainHeightPoints = [];
   const [username, setUsername] = useState("");
-  const [device, setDevice] = useState(defaultDevice);
+  const [device, setDevice] = useState("");
   const [{ data, loading, error }, refetch] = useAxios(
     "http://localhost:8080/" + device
   );
@@ -20,6 +22,42 @@ export default function App() {
   };
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
+  const wind_intensity = {
+    theme: "light2",
+    title: {
+      text: "Wind Intensity"
+    },
+    axisY: {
+      title: "Wind Intensity in m/s",
+      includeZero: false
+    },
+    data: [
+      {
+        type: "line",
+        xValueFormatString: "MMM YYYY",
+        yValueFormatString: "##,##%",
+        dataPoints: windIntensityPoints
+      }
+    ]
+  };
+  const rain_height = {
+    theme: "light2",
+    title: {
+      text: "Rain Height"
+    },
+    axisY: {
+      title: "Rain Height in mm/h",
+      includeZero: false
+    },
+    data: [
+      {
+        type: "line",
+        xValueFormatString: "MMM YYYY",
+        yValueFormatString: "##,##%",
+        dataPoints: rainHeightPoints
+      }
+    ]
+  };
   const humidity = {
     theme: "light2",
     title: {
@@ -39,13 +77,33 @@ export default function App() {
       }
     ]
   };
+  const wind_direction = {
+    theme: "light2",
+    title: {
+      text: "Wind Direction "
+    },
+    axisY: {
+      title: "Wind Direction in degrees",
+      postfix: "%",
+      includeZero: false
+    },
+    data: [
+      {
+        type: "line",
+        xValueFormatString: "MMM YYYY",
+        yValueFormatString: "##,##%",
+        dataPoints: windDirectionPoints
+      }
+    ]
+  };
+
   const temperature = {
     theme: "light2",
     title: {
       text: "Temperature"
     },
     axisY: {
-      title: "Humidity in %",
+      title: "Temperature in C",
       postfix: "%",
       includeZero: false
     },
@@ -59,15 +117,26 @@ export default function App() {
     ]
   };
   for (var i = 0; i < data.length; i++) {
+    let date = new Date(data[i].created);
     humidityPoints.push({
-      x: new Date(data[i].created),
+      x: date,
       y: data[i].humidity
     });
-  }
-  for (i = 0; i < data.length; i++) {
     temperaturePoints.push({
-      x: new Date(data[i].created),
+      x: date,
       y: data[i].temperature
+    });
+    windDirectionPoints.push({
+      x: date,
+      y: data[i].wind_direction
+    });
+    rainHeightPoints.push({
+      x: date,
+      y: data[i].rain_height
+    });
+    windIntensityPoints.push({
+      x: date,
+      y: data[i].wind_intensity
     });
   }
   return (
@@ -82,8 +151,11 @@ export default function App() {
       </form>
 
       <button onClick={refetch}>refetch</button>
-      <CanvasJSChart options={humidity} />
       <CanvasJSChart options={temperature} />
+      <CanvasJSChart options={humidity} />
+      <CanvasJSChart options={wind_direction} />
+      <CanvasJSChart options={wind_intensity} />
+      <CanvasJSChart options={rain_height} />
     </div>
   );
 }

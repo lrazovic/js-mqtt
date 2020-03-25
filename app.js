@@ -38,7 +38,7 @@ app.use(function(err, req, res, next) {
   res.render("error");
 });
 
-mongoose.connect("mongodb://localhost/sensors", {
+mongoose.connect("mongodb://localhost:27017/sensors", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
