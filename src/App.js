@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import useAxios from "axios-hooks";
+import defaultDevice from "./credentials";
 
 import CanvasJSReact from "./canvasjs.react";
 //var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 export default function App() {
-  var dataPoints = [];
+  var humidityPoints = [];
+  var temperaturePoints = [];
   const [username, setUsername] = useState("");
-  const [device, setDevice] = useState("");
+  const [device, setDevice] = useState(defaultDevice);
   const [{ data, loading, error }, refetch] = useAxios(
     "http://localhost:8080/" + device
   );
@@ -18,7 +20,7 @@ export default function App() {
   };
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
-  const options = {
+  const humidity = {
     theme: "light2",
     title: {
       text: "Humidity"
@@ -33,14 +35,39 @@ export default function App() {
         type: "line",
         xValueFormatString: "MMM YYYY",
         yValueFormatString: "##,##%",
-        dataPoints: dataPoints
+        dataPoints: humidityPoints
+      }
+    ]
+  };
+  const temperature = {
+    theme: "light2",
+    title: {
+      text: "Temperature"
+    },
+    axisY: {
+      title: "Humidity in %",
+      postfix: "%",
+      includeZero: false
+    },
+    data: [
+      {
+        type: "line",
+        xValueFormatString: "MMM YYYY",
+        yValueFormatString: "##,##%",
+        dataPoints: temperaturePoints
       }
     ]
   };
   for (var i = 0; i < data.length; i++) {
-    dataPoints.push({
+    humidityPoints.push({
       x: new Date(data[i].created),
       y: data[i].humidity
+    });
+  }
+  for (i = 0; i < data.length; i++) {
+    temperaturePoints.push({
+      x: new Date(data[i].created),
+      y: data[i].temperature
     });
   }
   return (
@@ -53,8 +80,10 @@ export default function App() {
         />
         <button type="submit">Select Device</button>
       </form>
+
       <button onClick={refetch}>refetch</button>
-      <CanvasJSChart options={options} />
+      <CanvasJSChart options={humidity} />
+      <CanvasJSChart options={temperature} />
     </div>
   );
 }

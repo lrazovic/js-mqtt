@@ -5,10 +5,8 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
 var app = express();
-var mqtt = require("mqtt");
 var mongoose = require("mongoose");
 var indexRouter = require("./routes/index");
-var username = require("./credentials.js");
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -40,64 +38,12 @@ app.use(function(err, req, res, next) {
   res.render("error");
 });
 
-// MongoDB connection via mongoose
 mongoose.connect("mongodb://localhost/sensors", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
-var db = mongoose.connection;
+db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
-var Sensor = mongoose.model("Sensor", sensorSchema);
-var sensorSchema = new mongoose.Schema({
-  created: {
-    type: Date,
-    default: Date.now
-  },
-  temperature: Number,
-  humidity: Number,
-  rain_height: Number,
-  wind_direction: Number,
-  wind_intensity: Number
-});
-
-//MQTT connetion and Subscribe
-const clientId =
-  "mqttjs_" +
-  Math.random()
-    .toString(16)
-    .substr(2, 8);
-
-// Local MQTT broker and device (NOT GATEWAY) username
-var client = mqtt.connect("mqtt://127.0.0.1", {
-  username: username,
-  clientId: clientId
-});
-
-client.on("error", function(err) {
-  console.error(err);
-  client.end();
-});
-
-const requestID = Math.random()
-  .toString(4)
-  .substr(2, 8);
-
-client.on("connect", function() {
-  client.subscribe("v1/devices/me/attributes/+", { qos: 0 });
-  client.publish(
-    "v1/devices/me/attributes/request/" + requestID,
-    '{"clientKeys":"humidity,temperature,rain_height,wind_direction,wind_intensity"}'
-  );
-});
-
-// Serialize and store every new message received
-client.on("message", function(topic, message, packet) {
-  var obj = JSON.parse(message.toString())["client"];
-  var msg = new Sensor(obj);
-  msg.save(function(err, _) {
-    if (err) return console.error(err);
-  });
-});
 
 module.exports = app;

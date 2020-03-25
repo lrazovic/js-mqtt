@@ -1,32 +1,15 @@
 var express = require("express");
 var router = express.Router();
-var mongoose = require("mongoose");
+var mqttHandler = require("../mqttHandler");
+var Sensor = require("../sensorSchema");
 
-var sensorSchema = new mongoose.Schema({
-  created: {
-    type: Date,
-    default: Date.now
-  },
-  temperature: Number,
-  humidity: Number,
-  rain_height: Number,
-  wind_direction: Number,
-  wind_intensity: Number
-});
-
-var Sensor = mongoose.model("Sensor", sensorSchema);
-
-router.get("/", async function(req, res, next) {
-  const query = Sensor.find();
-  const docs = await query; // Get the documents
-  res.json(docs);
-});
-
-router.get("/:username", async function(req, res, next) {
+router.get("/:username", function(req, res) {
   const deviceUsername = req.params.username;
-  const query = Sensor.find({ username: deviceUsername });
-  const docs = await query; // Get the documents
-  res.json(docs);
+  var mqttClient = new mqttHandler(deviceUsername);
+  mqttClient.connect();
+  Sensor.find({ username: deviceUsername }, (err, sensors) => {
+    res.json(sensors);
+  });
 });
 
 module.exports = router;
